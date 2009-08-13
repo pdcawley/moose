@@ -410,6 +410,8 @@ sub combine {
         push @roles => $actual_role;
 
         next unless defined $params;
+        Carp::cluck("The excludes option for role application has been deprecated. Use -excludes instead.") if exists $params->{excludes};
+        Carp::cluck("The alias option for role application has been deprecated. Use -alias instead.") if exists $params->{alias};
         $role_params{$actual_role->name} = $params;
     }
 

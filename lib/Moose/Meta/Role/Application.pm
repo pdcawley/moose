@@ -24,9 +24,11 @@ sub new {
     my ($class, %params) = @_;
 
     if ( exists $params{excludes} && !exists $params{'-excludes'} ) {
+        Carp::cluck("The excludes option for role application has been deprecated. Use -excludes instead.");
         $params{'-excludes'} = delete $params{excludes};
     }
     if ( exists $params{alias} && !exists $params{'-alias'} ) {
+        Carp::cluck("The alias option for role application has been deprecated. Use -alias instead.");
         $params{'-alias'} = delete $params{alias};
     }
 
