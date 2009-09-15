@@ -53,7 +53,8 @@ sub build_import_methods {
     # Moose::Util::TypeConstraints did export to main (unlike Moose &
     # Moose::Role).
     $methods{import} = $class->_make_import_sub( $exporting_package,
-        $exporter, \@exports_from, $args{_export_to_main} );
+        $exporter, \@exports_from, $args{_export_to_main},
+        ($args{init_meta_params} || []) );
 
     $methods{unimport} = $class->_make_unimport_sub( $exporting_package,
         $exports, $is_removable, $export_recorder );
@@ -302,6 +303,7 @@ sub _make_import_sub {
     my $exporter          = shift;
     my $exports_from      = shift;
     my $export_to_main    = shift;
+    my $init_meta_params    = shift;
 
     return sub {
 
@@ -345,13 +347,27 @@ sub _make_import_sub {
             return;
         }
 
+        shift;
+        my %extra_args;
+        # don't want to just force @_ into a hash, since it really actually is
+        # an array
+        for my $i (0..($#_ - 1)) {
+            if (grep { $_ eq $_[$i] } @$init_meta_params) {
+                $extra_args{$_[$i]} = $_[$i + 1];
+                splice @_, $i, 2;
+            }
+        }
         my $did_init_meta;
         for my $c ( grep { $_->can('init_meta') } $class, @{$exports_from} ) {
             # init_meta can apply a role, which when loaded uses
             # Moose::Exporter, which in turn sets $CALLER, so we need
             # to protect against that.
             local $CALLER = $CALLER;
-            $c->init_meta( for_class => $CALLER, metaclass => $metaclass );
+            $c->init_meta(
+                %extra_args,
+                for_class => $CALLER,
+                metaclass => $metaclass,
+            );
             $did_init_meta = 1;
         }
 
