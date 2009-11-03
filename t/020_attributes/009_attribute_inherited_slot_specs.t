@@ -9,6 +9,14 @@ use Test::Exception;
 
 
 {
+    package Thing::Meta::Attribute;
+    use Moose;
+
+    extends 'Moose::Meta::Attribute';
+    around illegal_options_for_inheritance => sub {
+        return (shift->(@_), qw/trigger/);
+    };
+
     package Thing;
     use Moose;
 
@@ -44,7 +52,7 @@ use Test::Exception;
 
     # this one will work here ....
     has 'fail' => (isa => 'CodeRef', is => 'bare');
-    has 'other_fail' => (is => 'bare');
+    has 'other_fail' => (metaclass => 'Thing::Meta::Attribute', is => 'bare');
 
     package Bar;
     use Moose;
