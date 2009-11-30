@@ -5,12 +5,11 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
+
 BEGIN {
     eval "use Test::Output;";
     plan skip_all => "Test::Output is required for this test" if $@;
-    plan tests => 65;
 }
-
 
 {
     package HasOwnImmutable;
@@ -389,3 +388,19 @@ BEGIN {
     ok( ! UseAllOptions->can($_), "UseAllOptions::$_ has been unimported" )
         for qw( with_meta1 with_meta2 with_caller1 with_caller2 as_is1 );
 }
+
+{
+    package AlreadyHasImport;
+
+    sub as_is1 { 42 }
+
+    ::stderr_like(
+        sub { AllOptions->import('as_is1') },
+        qr/AllOptions is overwriting symbol as_is1 at ${\__FILE__}/,
+        'warning when overwriting existign symbols',
+    );
+
+    ::is(as_is1, 2, 'import got overwritten');
+}
+
+done_testing;
