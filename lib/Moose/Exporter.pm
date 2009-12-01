@@ -50,13 +50,18 @@ sub build_import_methods {
                 my ($arg, $to_export) = @_;
                 my $meta = Class::MOP::Package->initialize($arg->{into});
 
+                my @overwritten;
+
                 for (my $i = 0; $i < @{ $to_export }; $i += 2) {
                     my $as = $to_export->[$i];
+                    push @overwritten, $as
+                        if $meta->has_package_symbol('&' . $as);
+                }
 
-                    if ($meta->has_package_symbol('&' . $as)) {
-                        local $Carp::CarpLevel = 1;
-                        carp $arg->{class} . " is overwriting symbol $as";
-                    }
+                if (@overwritten) {
+                    local $Carp::CarpLevel = 1;
+                    carp $arg->{class} . " is overwriting symbol" . (@overwritten > 1 ? 's' : '')
+                      . " " . Moose::Util::english_list(@overwritten);
                 }
 
                 goto &Sub::Exporter::default_installer;
