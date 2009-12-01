@@ -45,6 +45,7 @@ my $test_module_source_1 = q|
 package TestBaz;
 use Moose;
 has 'foo' => (is => 'ro', isa => 'Int');
+no Moose;
 1;
 |;
 
@@ -53,6 +54,7 @@ package TestBaz;
 use Moose;
 extends 'Foo';
 has 'foo' => (is => 'rw', isa => 'Int');
+no Moose;
 1;
 |;
 
