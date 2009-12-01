@@ -397,7 +397,7 @@ BEGIN {
 
     ::stderr_like(
         sub { AllOptions->import('as_is1', 'with_caller1') },
-        qr/AllOptions is overwriting symbols as_is1 and with_caller1 at ${\__FILE__}/,
+        qr/AllOptions is overwriting symbols AlreadyHasImport::as_is1 and AlreadyHasImport::with_caller1 at ${\__FILE__}/,
         'warning when overwriting existign symbols',
     );
 

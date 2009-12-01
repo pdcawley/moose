@@ -10,6 +10,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 use Class::MOP;
 use Carp qw(carp);
 use List::MoreUtils qw( first_index uniq );
+use Moose::Util;
 use Moose::Util::MetaRole;
 use Sub::Exporter 0.980;
 use Sub::Name qw(subname);
@@ -60,8 +61,10 @@ sub build_import_methods {
 
                 if (@overwritten) {
                     local $Carp::CarpLevel = 1;
-                    carp $arg->{class} . " is overwriting symbol" . (@overwritten > 1 ? 's' : '')
-                      . " " . Moose::Util::english_list(@overwritten);
+                    carp $arg->{class}
+                        . " is overwriting symbol"
+                        . (@overwritten > 1 ? 's' : '') . " "
+                        . Moose::Util::english_list(map { join '::' => $arg->{into}, $_ } @overwritten);
                 }
 
                 goto &Sub::Exporter::default_installer;
