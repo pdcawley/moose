@@ -160,23 +160,33 @@ sub _make_sub_exporter_params {
             my ($sub, $coderef_name);
 
             if ( ref $name ) {
-                $sub  = $name;
+                $sub = $name;
 
-                # Even though Moose re-exports things from Carp &
-                # Scalar::Util, we don't want to remove those at
-                # unimport time, because the importing package may
-                # have imported them explicitly ala
-                #
-                # use Carp qw( confess );
-                #
-                # This is a hack. Since we can't know whether they
-                # really want to keep these subs or not, we err on the
-                # safe side and leave them in.
                 my $coderef_pkg;
                 ( $coderef_pkg, $coderef_name )
                     = Class::MOP::get_code_info($name);
 
-                $is_removable{$coderef_name} = $coderef_pkg eq $package ? 1 : 0;
+                # Moose re-exports things from Carp and Scalar::Util. Usually,
+                # we want to remove those again at unimport time. However, the
+                # importing package might have imported those symbols
+                # explicitly after using Moose ala
+                #
+                # use Moose;
+                # use Carp qw( confess );
+                #
+                # In this case, we don't want to remove 'confess' when
+                # unimporting. To do that, we wrap the exports from other
+                # packages into an anon coderef. This way can, at unimport
+                # time, figure out if the package symbol still contains the
+                # coderef we exported or if the user overwrote it with
+                # something else we don't want to remove.
+
+                if ($coderef_pkg ne $package) {
+                    $sub = sub { goto &$name };
+                    &Scalar::Util::set_prototype($sub, prototype $name);
+                }
+
+                $is_removable{$coderef_name} = 1;
             }
             else {
                 $sub = $class->_sub_from_package( $package, $name )
@@ -188,7 +198,7 @@ sub _make_sub_exporter_params {
 
             $export_recorder->{$sub} = 1;
 
-            $exports{$coderef_name} = sub {$sub};
+            $exports{$coderef_name} = sub { $sub };
         }
     }
 
