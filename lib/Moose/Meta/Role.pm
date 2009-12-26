@@ -14,12 +14,13 @@ $VERSION = eval $VERSION;
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Moose::Meta::Class;
+use Moose::Meta::Role::Attribute;
 use Moose::Meta::Role::Method;
 use Moose::Meta::Role::Method::Required;
 use Moose::Meta::Role::Method::Conflicting;
 use Moose::Util qw( ensure_all_roles );
 
-use base 'Class::MOP::Module', 'Class::MOP::HasAttributes';
+use base 'Class::MOP::Module', 'Class::MOP::Mixin::HasAttributes';
 
 ## ------------------------------------------------------------------
 ## NOTE:
@@ -163,57 +164,26 @@ sub initialize {
     return Class::MOP::get_metaclass_by_name($pkg)
         || $class->SUPER::initialize(
         $pkg,
-        'attribute_metaclass' => 'Moose::Meta::Attribute',
+        'attribute_metaclass' => 'Moose::Meta::Role::Attribute',
         @_
         );
 }
 
-my $Role_Loaded;
-# XXX - copied from Moose::Meta::Class
 sub add_attribute {
     my $self = shift;
 
-    # Since this _is_ a role, it needs to be loaded after Moose::Meta::Role is
-    # done setting itself up.
-    unless ($Role_Loaded) {
-        require Moose::Meta::Attribute::Trait::InRole;
-        $Role_Loaded = 1;
+    if (blessed $_[0] && ! $_[0]->isa('Moose::Meta::Role::Attribute') ) {
+        my $class = ref $_[0];
+        Moose->throw_error( "Cannot add a $class as an attribute to a role" );
     }
 
-    my $attr = (
-        blessed $_[0] && $_[0]->isa('Class::MOP::Attribute')
-        ? $self->_ensure_attribute_trait($_[0] )
-        : $self->_process_attribute(@_)
-    );
-
-    $self->SUPER::add_attribute($attr);
-
-    return $attr;
+    return $self->SUPER::add_attribute(@_);
 }
 
-sub _ensure_attribute_trait {
-    my $self = shift;
-    my $attr = shift;
+sub _attach_attribute {
+    my ( $self, $attribute ) = @_;
 
-    ensure_all_roles( $attr, 'Moose::Meta::Attribute::Trait::InRole' );
-
-    return $attr;
-}
-
-sub _process_attribute {
-    my ( $self, $name, @args ) = @_;
-
-    my %args = scalar @args == 1
-        && ref( $args[0] ) eq 'HASH' ? %{ $args[0] } : @args;
-
-    if ( $args{traits} ) {
-        push @{ $args{traits} }, 'Moose::Meta::Attribute::Trait::InRole';
-    }
-    else {
-        $args{traits} = ['Moose::Meta::Attribute::Trait::InRole'];
-    }
-
-    $self->attribute_metaclass->interpolate_class_and_new( $name, %args );
+    $attribute->attach_to_role($self);
 }
 
 sub add_required_methods {
@@ -487,7 +457,8 @@ sub create {
     if (exists $options{attributes}) {
         foreach my $attribute_name (keys %{$options{attributes}}) {
             my $attr = $options{attributes}->{$attribute_name};
-            $meta->add_attribute($attribute_name => $attr);
+            $meta->add_attribute(
+                $attribute_name => blessed $attr ? $attr : %{$attr} );
         }
     }
 

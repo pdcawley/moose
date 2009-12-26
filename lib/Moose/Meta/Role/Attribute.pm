@@ -66,4 +66,10 @@ sub attribute_for_class {
         $self->name => %{ $self->original_options } );
 }
 
+sub clone {
+    my $self = shift;
+
+    return ( ref $self )->new( $self->name, %{ $self->original_options } );
+}
+
 1;

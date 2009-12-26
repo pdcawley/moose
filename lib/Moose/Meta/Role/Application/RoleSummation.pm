@@ -129,8 +129,8 @@ sub apply_attributes {
 
         if ( exists $seen{$name} ) {
             if ( $seen{$name} != $attr ) {
-                my $role1 = $seen{$name}->associated_class->name;
-                my $role2 = $attr->associated_class->name;
+                my $role1 = $seen{$name}->associated_role->name;
+                my $role2 = $attr->associated_role->name;
 
                 require Moose;
                 Moose->throw_error(
@@ -146,7 +146,7 @@ sub apply_attributes {
     }
 
     foreach my $attr (@all_attributes) {
-        $c->add_attribute($attr);
+        $c->add_attribute( $attr->clone );
     }
 }
 

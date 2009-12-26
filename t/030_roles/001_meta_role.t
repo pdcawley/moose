@@ -7,6 +7,7 @@ use Test::More;
 use Test::Exception;
 
 use Moose::Meta::Role;
+use Moose::Util::TypeConstraints ();
 
 {
     package FooRole;
@@ -56,10 +57,11 @@ is_deeply(
 ok($foo_role->has_attribute('bar'), '... FooRole does have the bar attribute');
 
 my $bar = $foo_role->get_attribute('bar');
-is( $bar->get_read_method, 'bar', 'bar has a reader named bar' );
-is( $bar->get_write_method, 'bar', 'bar has a writer named bar' );
+is_deeply( $bar->original_options, { is => 'rw', isa => 'Foo' },
+    'original options for bar attribute' );
+my $bar_for_class = $bar->attribute_for_class('Moose::Meta::Attribute');
 is(
-    $bar->type_constraint,
+    $bar_for_class->type_constraint,
     Moose::Util::TypeConstraints::class_type('Foo'),
     'bar has a Foo class type'
 );
@@ -76,8 +78,8 @@ is_deeply(
 ok($foo_role->has_attribute('baz'), '... FooRole does have the baz attribute');
 
 my $baz = $foo_role->get_attribute('baz');
-is( $baz->get_read_method, 'baz', 'baz has a reader named baz' );
-is( $baz->get_write_method, undef, 'baz does not have a writer' );
+is_deeply( $baz->original_options, { is => 'ro' },
+    'original options for baz attribute' );
 
 lives_ok {
     $foo_role->remove_attribute('bar');
