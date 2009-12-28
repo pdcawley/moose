@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Carp 'confess';
+use List::MoreUtils 'all';
 use Scalar::Util 'blessed', 'weaken';
 
 our $VERSION   = '0.93';
@@ -70,6 +71,28 @@ sub clone {
     my $self = shift;
 
     return ( ref $self )->new( $self->name, %{ $self->original_options } );
+}
+
+sub is_same_as {
+    my $self = shift;
+    my $attr = shift;
+
+    my $self_options = $self->original_options;
+    my $other_options = $attr->original_options;
+
+    return 0
+        unless ( join q{|}, sort keys %{$self_options} ) eq ( join q{|}, sort keys %{$other_options} );
+
+    for my $key ( keys %{$self_options} ) {
+        return 0 if defined $self_options->{$key} && ! defined $other_options->{$key};
+        return 0 if ! defined $self_options->{$key} && defined $other_options->{$key};
+
+        next if all { ! defined } $self_options->{$key}, $other_options->{$key};
+
+        return 0 unless $self_options->{$key} eq $other_options->{$key};
+    }
+
+    return 1;
 }
 
 1;

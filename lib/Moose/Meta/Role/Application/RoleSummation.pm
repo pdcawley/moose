@@ -128,18 +128,17 @@ sub apply_attributes {
         my $name = $attr->name;
 
         if ( exists $seen{$name} ) {
-            if ( $seen{$name} != $attr ) {
-                my $role1 = $seen{$name}->associated_role->name;
-                my $role2 = $attr->associated_role->name;
+            next if $seen{$name}->is_same_as($attr);
 
-                require Moose;
-                Moose->throw_error(
-                    "We have encountered an attribute conflict with '$name' "
-                        . "during role composition. "
-                        . " This attribute is defined in both $role1 and $role2."
-                        . " This is fatal error and cannot be disambiguated."
-                );
-            }
+            my $role1 = $seen{$name}->associated_role->name;
+            my $role2 = $attr->associated_role->name;
+
+            require Moose;
+            Moose->throw_error(
+                "We have encountered an attribute conflict with '$name' "
+                    . "during role composition. "
+                    . " This attribute is defined in both $role1 and $role2."
+                    . " This is fatal error and cannot be disambiguated." );
         }
 
         $seen{$name} = $attr;
