@@ -273,7 +273,7 @@ $_->make_immutable(
     Moose::Meta::Role::Application::ToInstance
 );
 
-Moose::Meta::Mixin::AttributeBase->meta->make_immutable(
+Moose::Meta::Mixin::AttributeCore->meta->make_immutable(
     inline_constructor => 0,
     constructor_name   => undef,
 );

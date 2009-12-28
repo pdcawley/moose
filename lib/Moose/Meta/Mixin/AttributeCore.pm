@@ -1,4 +1,4 @@
-package Moose::Meta::Mixin::AttributeBase;
+package Moose::Meta::Mixin::AttributeCore;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use warnings;
 our $VERSION   = '0.93';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use base 'Class::MOP::Mixin::AttributeBase';
+use base 'Class::MOP::Mixin::AttributeCore';
 
 __PACKAGE__->meta->add_attribute( 'isa'  => ( reader => '_isa_metadata' ) );
 __PACKAGE__->meta->add_attribute( 'does' => ( reader => '_does_metadata' ) );

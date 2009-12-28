@@ -17,7 +17,7 @@ use Moose::Meta::Method::Delegation;
 use Moose::Util ();
 use Moose::Util::TypeConstraints ();
 
-use base 'Class::MOP::Attribute', 'Moose::Meta::Mixin::AttributeBase';
+use base 'Class::MOP::Attribute', 'Moose::Meta::Mixin::AttributeCore';
 
 __PACKAGE__->meta->add_attribute('traits' => (
     reader    => 'applied_traits',
