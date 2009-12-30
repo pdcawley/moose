@@ -410,9 +410,14 @@ sub _apply_meta_traits {
 
     return unless @resolved_traits;
 
+    my $key
+        = $meta->isa('Moose::Meta::Role')
+        ? 'role_metaclass_roles'
+        : 'metaclass_roles';
+
     Moose::Util::MetaRole::apply_metaclass_roles(
-        for_class       => $class,
-        metaclass_roles => \@resolved_traits,
+        for_class => $class,
+        $key      => \@resolved_traits,
     );
 }
 
@@ -473,7 +478,8 @@ sub _make_init_meta {
     my %metaclass_roles;
     for my $role (
         map {"${_}_roles"}
-        qw(metaclass
+        qw(
+        metaclass
         attribute_metaclass
         method_metaclass
         wrapped_method_metaclass
@@ -481,11 +487,21 @@ sub _make_init_meta {
         constructor_class
         destructor_class
         error_class
-        application_to_class_class
-        application_to_role_class
-        application_to_instance_class)
+
+        role_metaclass
+        role_attribute_metaclass
+        role_method_metaclass
+        role_wrapped_method_metaclass
+        role_required_method_metaclass
+        role_conflicting_method_metaclass
+        role_application_to_class_class
+        role_application_to_role_class
+        role_application_to_instance_class
+        role_application_role_summation_class
+        )
         ) {
-        $metaclass_roles{$role} = $args->{$role} if exists $args->{$role};
+        $metaclass_roles{$role} = $args->{$role}
+            if exists $args->{$role};
     }
 
     my %base_class_roles;

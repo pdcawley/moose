@@ -10,76 +10,130 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use List::MoreUtils qw( all );
 
-my @Classes = qw( constructor_class destructor_class error_class );
-
 sub apply_metaclass_roles {
     my %options = @_;
 
-    my $for = blessed $options{for_class}
+    my $for
+        = blessed $options{for_class}
         ? $options{for_class}
-        : Class::MOP::class_of($options{for_class});
+        : Class::MOP::class_of( $options{for_class} );
 
-    my %old_classes = map { $_ => $for->$_ }
-                      grep { $for->can($_) }
-                      @Classes;
-
-    my $meta = _make_new_metaclass( $for, \%options );
-
-    for my $c ( grep { $meta->can($_) } @Classes ) {
-        if ( $options{ $c . '_roles' } ) {
-            my $class = _make_new_class(
-                $meta->$c(),
-                $options{ $c . '_roles' }
-            );
-
-            $meta->$c($class);
-        }
-        else {
-            $meta->$c( $old_classes{$c} );
-        }
+    if ( $for->isa('Moose::Meta::Role') ) {
+        return _make_new_role_metaclass( $for, \%options );
     }
-
-    return $meta;
+    else {
+        return _make_new_class_metaclass( $for, \%options );
+    }
 }
 
-sub _make_new_metaclass {
+sub _make_new_class_metaclass {
     my $for     = shift;
     my $options = shift;
 
-    return $for
-        unless grep { exists $options->{ $_ . '_roles' } }
+    return _make_new_metaclass(
+        $for, $options,
+        'metaclass',
+        [
             qw(
-            metaclass
-            attribute_metaclass
-            method_metaclass
-            wrapped_method_metaclass
-            instance_metaclass
-            application_to_class_class
-            application_to_role_class
-            application_to_instance_class
-            application_role_summation_class
+                attribute_metaclass
+                method_metaclass
+                wrapped_method_metaclass
+                instance_metaclass
+                )
+        ],
+        [
+            qw(
+                constructor_class
+                destructor_class
+                error_class
+                )
+        ],
+    );
+}
+
+sub _make_new_role_metaclass {
+    my $for     = shift;
+    my $options = shift;
+
+    return _make_new_metaclass(
+        $for, $options,
+        'metaclass',
+        [
+            qw(
+                attribute_metaclass
+                method_metaclass
+                wrapped_method_metaclass
+                required_method_metaclass
+                conflicting_method_metaclass
+                application_to_class_class
+                application_to_role_class
+                application_to_instance_class
+                application_role_summation_class
+                )
+        ],
+        [],
+        'role_',
+    );
+}
+
+sub _make_new_metaclass {
+    my $for                      = shift;
+    my $options                  = shift;
+    # The option for the class of the meta object (Moose::Meta::Class or
+    # Moose::Meta::Role)
+    my $primary_class            = shift;
+    # Classes which can be set in the call to reinitialize
+    my $constructor_classes      = shift;
+    # Classes which must be set with a call to a setter
+    my $post_constructor_classes = shift;
+    my $option_prefix            = shift || q{};
+
+    return $for
+        unless grep { exists $options->{ $option_prefix . $_ . '_roles' } }
+        $primary_class,
+        @{$constructor_classes}, @{$post_constructor_classes};
+
+    my $new_metaclass = _make_new_class(
+        ref $for,
+        $options->{ $option_prefix . $primary_class . '_roles' }
     );
 
-    my $new_metaclass
-        = _make_new_class( ref $for, $options->{metaclass_roles} );
-
-    # This could get called for a Moose::Meta::Role as well as a Moose::Meta::Class
     my %classes = map {
-        $_ => _make_new_class( $for->$_(), $options->{ $_ . '_roles' } )
+        $_ => _make_new_class( $for->$_(),
+            $options->{ $option_prefix . $_ . '_roles' } )
         }
-        grep { $for->can($_) }
-        qw(
-        attribute_metaclass
-        method_metaclass
-        wrapped_method_metaclass
-        instance_metaclass
-        application_to_class_class
-        application_to_role_class
-        application_to_instance_class
-        application_role_summation_class
-    );
+        grep { $for->can($_) } @{$constructor_classes};
 
-    return $new_metaclass->reinitialize( $for, %classes );
+    my $new_meta = $new_metaclass->reinitialize( $for, %classes );
+
+    my %old_classes = map { $_ => $for->$_ }
+        grep { $for->can($_) } @{$post_constructor_classes};
+
+    _set_metaclasses( $new_meta, \%old_classes, $options, $post_constructor_classes, $option_prefix );
+
+    return $new_meta;
+}
+
+sub _set_metaclasses {
+    my $new_meta         = shift;
+    my $old_classes      = shift;
+    my $options          = shift;
+    my $settable_classes = shift;
+    my $option_prefix    = shift;
+
+    for my $c ( grep { $new_meta->can($_) } @{$settable_classes} ) {
+        if ( $options->{ $option_prefix . $c . '_roles' } ) {
+            my $class = _make_new_class(
+                $old_classes->{$c},
+                $options->{ $option_prefix . $c . '_roles' }
+            );
+
+            $new_meta->$c($class);
+        }
+        else {
+            $new_meta->$c( $old_classes->{$c} );
+        }
+    }
 }
 
 sub apply_base_class_roles {

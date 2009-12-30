@@ -168,7 +168,7 @@ use Moose::Util::MetaRole;
 {
     Moose::Util::MetaRole::apply_metaclass_roles(
         for_class                        => 'My::Role',
-        application_to_class_class_roles => ['Role::Foo'],
+        role_application_to_class_class_roles => ['Role::Foo'],
     );
 
     ok( My::Role->meta->application_to_class_class->meta->does_role('Role::Foo'),
@@ -181,7 +181,7 @@ use Moose::Util::MetaRole;
 {
     Moose::Util::MetaRole::apply_metaclass_roles(
         for_class                        => 'My::Role',
-        application_to_role_class_roles => ['Role::Foo'],
+        role_application_to_role_class_roles => ['Role::Foo'],
     );
 
     ok( My::Role->meta->application_to_role_class->meta->does_role('Role::Foo'),
@@ -196,7 +196,7 @@ use Moose::Util::MetaRole;
 {
     Moose::Util::MetaRole::apply_metaclass_roles(
         for_class                           => 'My::Role',
-        application_to_instance_class_roles => ['Role::Foo'],
+        role_application_to_instance_class_roles => ['Role::Foo'],
     );
 
     ok( My::Role->meta->application_to_instance_class->meta->does_role('Role::Foo'),
@@ -599,7 +599,7 @@ lives_ok {
         Moose::Role->init_meta(%p);
         return Moose::Util::MetaRole::apply_metaclass_roles(
             for_class              => $p{for_class},
-            method_metaclass_roles => [ 'Foo::Meta::Role', ],
+            role_method_metaclass_roles => [ 'Foo::Meta::Role', ],
         );
     }
 }

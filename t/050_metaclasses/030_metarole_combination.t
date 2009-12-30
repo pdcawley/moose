@@ -83,11 +83,11 @@ our @applications;
         my ( $next, $self, @args ) = @_;
         return Moose::Util::MetaRole::apply_metaclass_roles(
             for_class => $self->$next(@args),
-            application_to_class_class_roles =>
+            role_application_to_class_class_roles =>
                 ['CustomApplication::Composite::ToClass'],
-            application_to_role_class_roles =>
+            role_application_to_role_class_roles =>
                 ['CustomApplication::Composite::ToRole'],
-            application_to_instance_class_roles =>
+            role_application_to_instance_class_roles =>
                 ['CustomApplication::Composite::ToInstance'],
         );
     };
@@ -113,11 +113,11 @@ our @applications;
         my ( $self, %options ) = @_;
         return Moose::Util::MetaRole::apply_metaclass_roles(
             for_class       => Moose::Role->init_meta(%options),
-            metaclass_roles => ['Role::WithCustomApplication'],
-            application_to_class_class_roles =>
+            role_metaclass_roles => ['Role::WithCustomApplication'],
+            role_application_to_class_class_roles =>
                 ['CustomApplication::ToClass'],
-            application_to_role_class_roles => ['CustomApplication::ToRole'],
-            application_to_instance_class_roles =>
+            role_application_to_role_class_roles => ['CustomApplication::ToRole'],
+            role_application_to_instance_class_roles =>
                 ['CustomApplication::ToInstance'],
         );
     }
