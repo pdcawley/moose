@@ -96,10 +96,12 @@ use Test::Moose qw(does_ok);
 
     my ( $import, $unimport, $init_meta )
         = Moose::Exporter->build_import_methods(
-        also                           => 'Moose::Role',
-        role_metaclass_roles           => ['Foo::Trait::Class'],
-        role_attribute_metaclass_roles => ['Foo::Trait::Attribute'],
-        install                        => [qw(import unimport)],
+        also           => 'Moose::Role',
+        role_metaroles => {
+            role      => ['Foo::Trait::Class'],
+            attribute => ['Foo::Trait::Attribute'],
+        },
+        install => [qw(import unimport)],
         );
 
     sub init_meta {

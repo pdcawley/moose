@@ -163,6 +163,33 @@ sub initialize {
         );
 }
 
+sub reinitialize {
+    my $self = shift;
+    my $pkg  = shift;
+
+    my $meta = blessed $pkg ? $pkg : Class::MOP::class_of($pkg);
+
+    my %existing_classes;
+    if ($meta) {
+        %existing_classes = map { $_ => $meta->$_() } qw(
+            attribute_metaclass
+            method_metaclass
+            wrapped_method_metaclass
+            required_method_metaclass
+            conflicting_method_metaclass
+            application_to_class_class
+            application_to_role_class
+            application_to_instance_class
+        );
+    }
+
+    return $self->SUPER::reinitialize(
+        $pkg,
+        %existing_classes,
+        @_,
+    );
+}
+
 sub add_attribute {
     my $self = shift;
 

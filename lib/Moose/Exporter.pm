@@ -410,15 +410,16 @@ sub _apply_meta_traits {
 
     return unless @resolved_traits;
 
-    my $key
-        = $meta->isa('Moose::Meta::Role')
-        ? 'role_metaclass_roles'
-        : 'metaclass_roles';
+    my %args = ( for => $class );
 
-    Moose::Util::MetaRole::apply_metaclass_roles(
-        for_class => $class,
-        $key      => \@resolved_traits,
-    );
+    if ( $meta->isa('Moose::Meta::Role') ) {
+        $args{role_metaroles} = { role => \@resolved_traits };
+    }
+    else {
+        $args{class_metaroles} = { class => \@resolved_traits };
+    }
+
+    Moose::Util::MetaRole::apply_metaroles(%args);
 }
 
 sub _get_caller {
@@ -475,7 +476,7 @@ sub _make_init_meta {
     my $class = shift;
     my $args  = shift;
 
-    my %metaclass_roles;
+    my %old_style_roles;
     for my $role (
         map {"${_}_roles"}
         qw(
@@ -487,20 +488,9 @@ sub _make_init_meta {
         constructor_class
         destructor_class
         error_class
-
-        role_metaclass
-        role_attribute_metaclass
-        role_method_metaclass
-        role_wrapped_method_metaclass
-        role_required_method_metaclass
-        role_conflicting_method_metaclass
-        role_application_to_class_class
-        role_application_to_role_class
-        role_application_to_instance_class
-        role_application_role_summation_class
         )
         ) {
-        $metaclass_roles{$role} = $args->{$role}
+        $old_style_roles{$role} = $args->{$role}
             if exists $args->{$role};
     }
 
@@ -508,7 +498,10 @@ sub _make_init_meta {
     %base_class_roles = ( roles => $args->{base_class_roles} )
         if exists $args->{base_class_roles};
 
-    return unless %metaclass_roles || %base_class_roles;
+    my %new_style_roles = map { $_ => $args->{$_} }
+        grep { exists $args->{$_} } qw( class_metaroles role_metaroles );
+
+    return unless %new_style_roles || %old_style_roles || %base_class_roles;
 
     return sub {
         shift;
@@ -516,9 +509,10 @@ sub _make_init_meta {
 
         return unless Class::MOP::class_of( $options{for_class} );
 
-        Moose::Util::MetaRole::apply_metaclass_roles(
-            for_class => $options{for_class},
-            %metaclass_roles,
+        Moose::Util::MetaRole::apply_metaroles(
+            for => $options{for_class},
+            %new_style_roles,
+            %old_style_roles,
         );
 
         Moose::Util::MetaRole::apply_base_class_roles(
