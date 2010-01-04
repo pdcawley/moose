@@ -47,3 +47,31 @@ __PACKAGE__->meta->add_attribute(
 );
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Moose::Meta::Mixin::AttributeCore - Core attributes shared by attribute metaclasses
+
+=head1 DESCRIPTION
+
+This class implements the core attributes (aka properties) shared by all Moose
+attributes. See the L<Moose::Meta::Attribute> documentation for API details.
+
+=head1 AUTHORS
+
+Dave Rolsky E<lt>autarch@urth.orgE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2006-2009 by Infinity Interactive, Inc.
+
+L<http://www.iinteractive.com>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
