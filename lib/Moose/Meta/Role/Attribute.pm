@@ -96,3 +96,85 @@ sub is_same_as {
 }
 
 1;
+
+=pod
+
+=head1 NAME
+
+Moose::Meta::Role::Attribute - A Moose Attribute metaclass for Roles
+
+=head1 DESCRIPTION
+
+This class implements the API for attributes in roles. Attributes in roles are
+more like attribute prototypes than full blown attributes. While they are
+introspectable, they have very little behavior.
+
+=head1 METHODS
+
+This class provides the following methods:
+
+=over 4
+
+=item B<< Moose::Meta::Role::Attribute->new(...) >>
+
+This method accepts all the options that would be passed to the constructor
+for L<Moose::Meta::Attribute>.
+
+=item B<< $attr->metaclass >>
+
+=item B<< $attr->is >>
+
+Returns the option as passed to the constructor.
+
+=item B<< $attr->associated_role >>
+
+Returns the L<Moose::Meta::Role> to which this attribute belongs, if any.
+
+=item B<< $attr->original_options >>
+
+Returns a hash reference of options passed to the constructor. This is used
+when creating a L<Moose::Meta::Attribute> object from this object.
+
+=item B<< $attr->attach_to_role($role) >>
+
+Attaches the attribute to the given L<Moose::Meta::Role>.
+
+=item B<< $attr->attribute_for_class($metaclass) >>
+
+Given an attribute metaclass name, this method calls C<<
+$metaclass->interpolate_class_and_new >> to construct an attribute object
+which can be added to a L<Moose::Meta::Class>.
+
+=item B<< $attr->clone >>
+
+Creates a new object identical to the object on which the method is called.
+
+=item B<< $attr->is_same_as($other_attr) >>
+
+Compares two role attributes and returns true if they are identical.
+
+=back
+
+In addition, this class implements all informational predicates implements by
+L<Moose::Meta::Attribute> (and L<Class::MOP::Attribute>).
+
+=head1 BUGS
+
+All complex software has bugs lurking in it, and this module is no
+exception. If you find a bug please either email me, or add the bug
+to cpan-RT.
+
+=head1 AUTHOR
+
+Dave Rolsky E<lt>autarch@urth.orgE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2006-2009 by Infinity Interactive, Inc.
+
+L<http://www.iinteractive.com>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
