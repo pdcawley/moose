@@ -7,6 +7,8 @@ use warnings;
 use Carp         'confess';
 use Scalar::Util 'blessed', 'weaken';
 
+use Sub::Name qw(subname);
+
 our $VERSION   = '0.93_03';
 $VERSION = eval $VERSION;
 our $AUTHORITY = 'cpan:STEVAN';
@@ -85,7 +87,7 @@ sub _initialize_body {
     # all... the only thing that would end up different would be
     # interpolating in $method_to_call, and a bunch of things in the
     # error handling that mostly never gets called - doy
-    $self->{body} = sub {
+    $self->{body} = subname($self->_body_name => sub {
         my $instance = shift;
         my $proxy    = $instance->$accessor();
 
@@ -106,7 +108,18 @@ sub _initialize_body {
         }
         unshift @_, @{ $self->curried_arguments };
         $proxy->$method_to_call(@_);
-    };
+    });
+}
+
+sub _body_name {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+    my $ctx = $attr->definition_context;
+    return "(delegation of "
+        . $self->name
+        . " => "
+        . $attr->name."->".$self->delegate_to_method
+        . ") defined at $ctx->{file} line $ctx->{line}";
 }
 
 sub _get_delegate_accessor {

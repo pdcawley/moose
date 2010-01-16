@@ -22,6 +22,8 @@ use Test::Exception;
 
     sub baz { 42 }
 
+    sub quux { confess }
+
     package Bar;
     use Moose;
 
@@ -31,6 +33,7 @@ use Test::Exception;
         handles => {
             'foo_bar' => 'bar',
             foo_baz => 'baz',
+            foo_quux => 'quux',
             'foo_bar_to_20' => [ bar => 20 ],
         },
     );
@@ -89,6 +92,16 @@ is($bar->foo_bar, 25, '... and bar->foo_bar delegated correctly again');
 # curried handles
 $bar->foo_bar_to_20;
 is($bar->foo_bar, 20, '... correctly curried a single argument');
+
+# Meaningful backtraces. Probably not in the right place.
+
+{
+    my $filename = __FILE__;
+    throws_ok { $bar->foo_quux } qr/(delegation of foo_quux => foo->quux)/,
+        'delegation body is named usefully';
+    throws_ok { $bar->foo_quux } qr/defined at $filename line \d+/,
+        '... and points at where the handler is defined';
+}
 
 # -------------------------------------------------------------------
 # ARRAY handles
