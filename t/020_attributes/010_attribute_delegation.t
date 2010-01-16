@@ -96,9 +96,10 @@ is($bar->foo_bar, 20, '... correctly curried a single argument');
 # Meaningful backtraces. Probably not in the right place.
 
 {
+    Bar->meta->make_immutable;
     my $filename = __FILE__;
-    throws_ok { $bar->foo_quux } qr/(delegation of foo_quux => foo->quux)/,
-        'delegation body is named usefully';
+    throws_ok { $bar->foo_quux } qr/delegation of foo_quux to foo->quux/,
+        'error location describes the delegation';
     throws_ok { $bar->foo_quux } qr/defined at $filename line \d+/,
         '... and points at where the handler is defined';
 }
